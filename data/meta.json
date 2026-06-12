@@ -1,0 +1,8 @@
+{
+  "updatedAt": "2026-06-12",
+  "basDt": "20260611",
+  "stockCount": 30,
+  "disclosureCount": 30,
+  "snapshotFrom": "20200101",
+  "note": "GitHub Pages displays this snapshot. Re-run update.ps1 locally to refresh."
+}

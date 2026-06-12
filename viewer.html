@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>공시 원문 보기 | 기업보고서 허브</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="page-viewer">
+
+  <header class="site-header site-header--compact">
+    <div class="site-header__inner">
+      <a href="index.html" class="brand">
+        <span class="brand__logo">BH</span>
+        <span class="brand__text"><strong>기업보고서 허브</strong><small>공시 원문</small></span>
+      </a>
+      <a href="javascript:history.back()" class="back-link">← 이전으로</a>
+    </div>
+  </header>
+
+  <main class="container viewer">
+    <section class="viewer__head">
+      <p class="viewer__label">공시 원문</p>
+      <h1 id="viewer-title" class="viewer__title">보고서</h1>
+      <p id="viewer-meta" class="viewer__meta"></p>
+      <div class="viewer__actions">
+        <a id="viewer-dart-link" class="btn" href="#" target="_blank" rel="noopener">전자공시 원문 열기</a>
+        <button type="button" id="viewer-open-here" class="btn btn--outline">아래에서 보기</button>
+      </div>
+    </section>
+
+    <section class="viewer__frame-wrap" id="viewer-frame-wrap" hidden>
+      <iframe id="viewer-frame" class="viewer__frame" title="DART 공시 원문"></iframe>
+      <p class="viewer__frame-note">원문이 보이지 않으면 「전자공시 원문 열기」를 눌러 주세요.</p>
+    </section>
+
+    <section class="viewer__guide info-box">
+      <p><strong>안내</strong> 보고서 원문은 금융감독원 전자공시 시스템에서 제공됩니다.</p>
+    </section>
+  </main>
+
+  <script src="js/viewer.js"></script>
+</body>
+</html>

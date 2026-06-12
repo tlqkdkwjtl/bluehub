@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 종목 | 블루허브</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="page-stocks">
+
+  <header class="site-header site-header--compact">
+    <div class="site-header__inner">
+      <a href="index.html" class="brand">
+        <span class="brand__logo">BH</span>
+        <span class="brand__text">
+          <strong>기업보고서 허브</strong>
+          <small>전체 종목</small>
+        </span>
+      </a>
+      <a href="index.html" class="back-link">← 메인으로</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section stocks-page">
+      <div class="section__head">
+        <div>
+          <h1 class="section__title">전체 종목</h1>
+          <p class="section__hint" id="stocks-summary">시세·공시가 연동된 상장기업 목록입니다.</p>
+        </div>
+      </div>
+
+      <div class="stocks-toolbar">
+        <label class="stocks-toolbar__search">
+          <span class="sr-only">종목 검색</span>
+          <input type="search" id="stocks-filter" class="stocks-toolbar__input" placeholder="기업명 또는 종목코드 검색" autocomplete="off">
+        </label>
+        <select id="stocks-sort" class="stocks-toolbar__select" aria-label="정렬">
+          <option value="name">이름순</option>
+          <option value="code">코드순</option>
+          <option value="price-desc">현재가 높은순</option>
+          <option value="change-desc">등락률 높은순</option>
+        </select>
+      </div>
+
+      <div id="stocks-grid" class="card-grid"></div>
+      <p id="stocks-empty" class="stocks-empty" hidden>검색 결과가 없습니다.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <p><strong>기업보고서 허브</strong> · 박창희 (201995038)</p>
+      <p class="site-footer__meta" id="footer-meta"></p>
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/logos.js"></script>
+  <script src="js/stocks.js"></script>
+</body>
+</html>
