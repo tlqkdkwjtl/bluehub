@@ -74,7 +74,7 @@
         <span class="tab-panel__badge">재무정보</span>
         <p id="finance-lead" class="tab-panel__lead">DART 정기보고서 기준 주요 재무지표를 확인합니다.</p>
         <div class="finance-summary" id="finance-summary"></div>
-        <h3 class="sub-section__title">손익 — 당기·전기 비교</h3>
+        <h3 class="sub-section__title" id="finance-pl-title">손익 — 연도별 비교</h3>
         <div class="finance-chart-wrap">
           <canvas id="finance-chart" aria-label="손익 당기 전기 비교"></canvas>
         </div>
@@ -89,22 +89,22 @@
         </div>
         <p id="finance-quarterly-note" class="finance-chart-note" hidden></p>
         <h3 class="sub-section__title">재무상태 — 자산 구성 (부채+자본)</h3>
-        <div class="finance-chart-wrap">
-          <canvas id="finance-balance-chart" aria-label="재무상태 당기 전기 비교"></canvas>
+        <div class="finance-chart-wrap finance-chart-wrap--balance">
+          <canvas id="finance-balance-chart" aria-label="연도별 자산 구성 비교"></canvas>
         </div>
         <p id="finance-chart-note" class="finance-chart-note"></p>
         <h3 class="sub-section__title">주요 재무지표</h3>
         <div class="data-table-wrap">
           <table class="data-table">
             <thead>
-              <tr><th>항목</th><th>당기</th><th>전기</th><th>전년대비</th></tr>
+              <tr id="finance-metrics-head"><th>항목</th><th>최근 연도</th><th>직전 연도</th><th>전년 대비</th></tr>
             </thead>
             <tbody id="finance-metrics-tbody"></tbody>
           </table>
         </div>
         <p id="finance-report-link" class="finance-report-link"></p>
         <div class="info-box">
-          <p>표·그래프 금액은 억원 단위로 통일했습니다. 자산총계 막대는 부채(아래)+자본(위)으로 구성됩니다. 원 단위 정확한 값은 표 또는 그래프 툴팁에서 확인할 수 있습니다.</p>
+          <p>표·그래프 금액은 억원 단위로 통일했습니다. 재무상태 막대는 아래 회색=부채, 위 파랑=자본이며 막대 전체=자산총계입니다. 그래프 숫자는 자산총계만 표시됩니다. 원 단위 정확한 값은 표 또는 그래프 툴팁에서 확인할 수 있습니다.</p>
         </div>
       </div>
 
