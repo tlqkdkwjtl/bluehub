@@ -177,6 +177,28 @@
     categoryPercentage: 0.62,
   };
 
+  const FINANCE_BALANCE_BAR_LAYOUT = {
+    maxBarThickness: 64,
+    barPercentage: 0.62,
+    categoryPercentage: 0.38,
+  };
+
+  function getFinancePeriodLabels(financials) {
+    const year = parseInt(financials?.bsns_year, 10);
+    if (year) {
+      return {
+        current: `${year}년`,
+        previous: `${year - 1}년`,
+        compareTitle: `${year}년 vs ${year - 1}년`,
+      };
+    }
+    return {
+      current: "최근 연도",
+      previous: "직전 연도",
+      compareTitle: "최근 vs 직전",
+    };
+  }
+
   const financeBarLabelPlugin = {
     id: "financeBarLabels",
     afterDatasetsDraw(chart) {
@@ -186,51 +208,27 @@
 
       if (chart.options._balanceStacked) {
         const balance = chart.options._balanceMeta;
-        const debtMeta = chart.getDatasetMeta(0);
         const equityMeta = chart.getDatasetMeta(1);
-
-        debtMeta.data.forEach((bar, i) => {
-          const val = chart.data.datasets[0].data[i];
-          if (!val) return;
-          ctx.save();
-          ctx.fillStyle = "#fff";
-          ctx.font = "bold 10px 'Noto Sans KR', sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(
-            `부채 ${formatChartBarValue(val, unit)}`,
-            bar.x,
-            (bar.y + bar.base) / 2
-          );
-          ctx.restore();
-        });
+        const labelSize = chart.options._financeLabelSize || 13;
 
         equityMeta.data.forEach((bar, i) => {
-          const val = chart.data.datasets[1].data[i];
-          if (!val) return;
           const assetVal = toChartAmount(
-            i === 0 ? balance.asset.current : balance.asset.previous,
+            i === 0 ? balance.asset.previous : balance.asset.current,
             unit
           );
+          const text = formatChartBarValue(assetVal, unit);
           ctx.save();
           ctx.fillStyle = "#334155";
-          ctx.font = "bold 10px 'Noto Sans KR', sans-serif";
+          ctx.font = `bold ${labelSize}px 'Noto Sans KR', sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "bottom";
-          ctx.fillText(`자산 ${formatChartBarValue(assetVal, unit)}`, bar.x, bar.y - 4);
-          if (val > assetVal * 0.08) {
-            ctx.fillStyle = "#fff";
-            ctx.textBaseline = "middle";
-            ctx.fillText(
-              `자본 ${formatChartBarValue(val, unit)}`,
-              bar.x,
-              (bar.y + bar.base) / 2
-            );
-          }
+          ctx.fillText(text, bar.x, bar.y - 4);
           ctx.restore();
         });
         return;
       }
+
+      const labelSize = chart.options._financeLabelSize || 10;
 
       chart.data.datasets.forEach((_, di) => {
         chart.getDatasetMeta(di).data.forEach((bar, i) => {
@@ -240,7 +238,7 @@
           const negative = val < 0;
           ctx.save();
           ctx.fillStyle = negative ? "#b91c1c" : "#334155";
-          ctx.font = "bold 10px 'Noto Sans KR', sans-serif";
+          ctx.font = `bold ${labelSize}px 'Noto Sans KR', sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = negative ? "top" : "bottom";
           ctx.fillText(text, bar.x, negative ? bar.y + 4 : bar.y - 4);
@@ -250,7 +248,7 @@
     },
   };
 
-  function buildPeriodCompareChart(canvas, instanceRef, items, sectionTitle) {
+  function buildPeriodCompareChart(canvas, instanceRef, items, sectionTitle, periodLabels) {
     if (!canvas || typeof Chart === "undefined") return instanceRef;
 
     if (!items.length) {
@@ -276,14 +274,14 @@
         labels,
         datasets: [
           {
-            label: "당기",
+            label: periodLabels?.current || "최근 연도",
             data: currentData,
             backgroundColor: financeBarColor,
             borderRadius: financeBarRadius,
             base: 0,
           },
           {
-            label: "전기",
+            label: periodLabels?.previous || "직전 연도",
             data: previousData,
             backgroundColor: financeBarColor,
             borderRadius: financeBarRadius,
@@ -350,15 +348,15 @@
     });
   }
 
-  /** 자산총계 = 부채 + 자본 누적 막대 (당기·전기) */
-  function buildBalanceStackedChart(canvas, instanceRef, finItems) {
+  /** 자산 구성 — 부채+자본 누적, 막대 위에는 자산총계만 표시 */
+  function buildBalanceAssetChart(canvas, instanceRef, finItems, periodLabels) {
     if (!canvas || typeof Chart === "undefined") return instanceRef;
 
     const asset = finItems.find((r) => r.account_nm === "자산총계");
     const debt = finItems.find((r) => r.account_nm === "부채총계");
     const equity = finItems.find((r) => r.account_nm === "자본총계");
 
-    if (!debt || !equity) {
+    if (!asset || !debt || !equity) {
       if (instanceRef) instanceRef.destroy();
       return null;
     }
@@ -371,9 +369,9 @@
     if (instanceRef) instanceRef.destroy();
 
     const unit = pickChartUnit();
-    const labels = ["당기", "전기"];
-    const debtData = [debt.current, debt.previous].map((v) => toChartAmount(v, unit));
-    const equityData = [equity.current, equity.previous].map((v) => toChartAmount(v, unit));
+    const labels = [periodLabels?.previous || "직전 연도", periodLabels?.current || "최근 연도"];
+    const debtData = [debt.previous, debt.current].map((v) => toChartAmount(v, unit));
+    const equityData = [equity.previous, equity.current].map((v) => toChartAmount(v, unit));
 
     return new Chart(canvas, {
       type: "bar",
@@ -385,36 +383,38 @@
             data: debtData,
             backgroundColor: "#64748b",
             stack: "asset",
-            borderRadius: { bottomLeft: 4, bottomRight: 4 },
+            borderRadius: { bottomLeft: 4, bottomRight: 4, topLeft: 0, topRight: 0 },
           },
           {
             label: "자본총계",
             data: equityData,
             backgroundColor: "#1a4f8c",
             stack: "asset",
-            borderRadius: { topLeft: 4, topRight: 4 },
+            borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 },
           },
         ],
       },
       options: {
         _financeUnit: unit,
+        _financeLabelSize: 13,
         _balanceStacked: true,
         _balanceMeta: { asset, debt, equity },
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { top: 24 } },
         plugins: {
-          legend: { position: "top", labels: { boxWidth: 12, font: { size: 11 } } },
+          legend: { position: "top", labels: { boxWidth: 14, font: { size: 13 } } },
           title: {
             display: true,
             text: "자산 구성 — 부채+자본 (단위: 억원)",
-            font: { size: 13, weight: "bold" },
+            font: { size: 15, weight: "bold" },
           },
           tooltip: {
             callbacks: {
               afterTitle(ctx) {
                 const idx = ctx[0].dataIndex;
-                const rawAsset = idx === 0 ? asset?.current : asset?.previous;
-                const yoy = calcYoYPercent(asset?.current, asset?.previous);
+                const rawAsset = idx === 0 ? asset.previous : asset.current;
+                const yoy = calcYoYPercent(asset.current, asset.previous);
                 return [
                   `자산총계: ${formatAmountSmart(rawAsset)}`,
                   `전년 대비(자산): ${formatYoY(yoy)}`,
@@ -424,7 +424,7 @@
                 const idx = ctx.dataIndex;
                 const rows = [debt, equity];
                 const row = rows[ctx.datasetIndex];
-                const raw = idx === 0 ? row.current : row.previous;
+                const raw = idx === 0 ? row.previous : row.current;
                 const chartVal = toChartAmount(raw, unit);
                 return [
                   ` ${ctx.dataset.label}: ${formatChartBarValue(chartVal, unit)} (${unit.suffix})`,
@@ -437,22 +437,24 @@
         scales: {
           x: {
             stacked: true,
-            ticks: { font: { size: 11 } },
+            ticks: { font: { size: 14, weight: "600" } },
             grid: { display: false },
           },
           y: {
             stacked: true,
             beginAtZero: true,
-            grace: "4%",
+            grace: "6%",
             title: { display: true, text: unit.suffix },
             ticks: {
+              font: { size: 12 },
               callback: (v) =>
                 `${Number(v).toLocaleString("ko-KR", { maximumFractionDigits: 0 })}${unit.short}`,
             },
+            grid: { color: "rgba(148, 163, 184, 0.25)" },
           },
         },
         datasets: {
-          bar: FINANCE_BAR_LAYOUT,
+          bar: FINANCE_BALANCE_BAR_LAYOUT,
         },
       },
     });
@@ -554,7 +556,7 @@
     });
   }
 
-  function renderFinanceChart(finItems, quarterly) {
+  function renderFinanceChart(finItems, quarterly, financials) {
     const canvas = document.getElementById("finance-chart");
     const balanceCanvas = document.getElementById("finance-balance-chart");
     const noteEl = document.getElementById("finance-chart-note");
@@ -570,6 +572,7 @@
       .map((name) => finItems.find((r) => r.account_nm === name))
       .filter(Boolean);
     const hasBalance =
+      finItems.some((r) => r.account_nm === "자산총계") &&
       finItems.some((r) => r.account_nm === "부채총계") &&
       finItems.some((r) => r.account_nm === "자본총계");
 
@@ -591,25 +594,30 @@
       return;
     }
 
+    const periodLabels = getFinancePeriodLabels(financials || {});
+
     financeChartInstance = buildPeriodCompareChart(
       canvas,
       financeChartInstance,
       plItems,
-      "손익"
+      "손익",
+      periodLabels
     );
-    financeBalanceChartInstance = buildBalanceStackedChart(
+    financeBalanceChartInstance = buildBalanceAssetChart(
       balanceCanvas,
       financeBalanceChartInstance,
-      finItems
+      finItems,
+      periodLabels
     );
 
     renderQuarterlyFinanceChart(quarterly || [], quarterlyCanvas, quarterlyTitle, quarterlyWrap, quarterlyControls, quarterlyNote);
 
     if (noteEl) {
       noteEl.textContent =
-        `모든 금액은 억원 단위입니다. 손익 그래프는 0선 기준 위=흑자·아래=적자(빨간 막대)이며, ` +
-        `파란=당기 흑자, 회색=전기 흑자입니다. 재무상태 그래프는 막대 전체가 자산총계이며, ` +
-        `아래 회색=부채·위 파란=자본입니다. ` +
+        `모든 금액은 억원 단위입니다. ${periodLabels.compareTitle} 재무를 비교합니다. ` +
+        `손익 그래프는 0선 기준 위=흑자·아래=적자(빨간 막대)이며, 파란=${periodLabels.current}·회색=${periodLabels.previous}입니다. ` +
+        `재무상태는 아래 회색=부채, 위 파랑=자본이며 막대 전체=자산총계입니다. ` +
+        `막대 위 숫자는 자산총계만 표시하고, 부채·자본 금액은 범례·툴팁에서 확인할 수 있습니다. ` +
         `마우스를 올리면 원 단위 정확한 금액을 볼 수 있습니다.`;
     }
   }
@@ -902,9 +910,11 @@
     if (lead) {
       let leadText = "DART 정기보고서에서 가져온 재무지표입니다.";
       if (finItems.length && financials.bsns_year) {
+        const pl = getFinancePeriodLabels(financials);
         leadText =
           `${financials.bsns_year}년 ${financials.reprt_name || "정기보고서"} · ` +
-          `${financials.fs_label || "연결"} 재무제표 기준입니다.`;
+          `${financials.fs_label || "연결"} 재무제표 기준입니다. ` +
+          `그래프는 ${pl.current}과 ${pl.previous} 결산을 나란히 비교합니다.`;
       } else if (!finItems.length) {
         leadText += " update.ps1로 스냅샷을 갱신해 주세요.";
       }
@@ -931,7 +941,16 @@
       }
     }
 
-    renderFinanceChart(finItems, financials.quarterly || []);
+    const pl = getFinancePeriodLabels(financials);
+    const plTitle = document.getElementById("finance-pl-title");
+    if (plTitle) plTitle.textContent = `손익 — ${pl.compareTitle}`;
+    const metricsHead = document.getElementById("finance-metrics-head");
+    if (metricsHead) {
+      metricsHead.innerHTML =
+        `<th>항목</th><th>${pl.current}</th><th>${pl.previous}</th><th>전년 대비</th>`;
+    }
+
+    renderFinanceChart(finItems, financials.quarterly || [], financials);
 
     if (reportLink) {
       const annual = (regular.length ? regular : list).find((r) =>
