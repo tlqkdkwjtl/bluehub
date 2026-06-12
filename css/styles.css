@@ -753,6 +753,16 @@ a:hover { text-decoration: underline; }
   }
 }
 
+.finance-chart-wrap--balance {
+  height: 280px;
+}
+
+@media (min-width: 640px) {
+  .finance-chart-wrap--balance {
+    height: 260px;
+  }
+}
+
 .finance-chart-wrap--compact {
   height: 150px;
 }
